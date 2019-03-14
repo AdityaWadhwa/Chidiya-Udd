@@ -1,16 +1,19 @@
 # Chidiya-Udd
-The title of the project describes a popular Indian game which almost each Indian has played in their childhood. 
-Its titled “Chidiya udd”. The rules of the game are simple. 
+The title of the project “Chidiya udd” describes a popular Indian game which almost each Indian has played in their childhood. 
+
 In the contemporary form, a person becomes a moderator and says the name of many objects which can either fly or they don’t and the players have to raise their finger in accordance with the object. 
+
 This project replicates exactly the contemporary form but eliminating the need of a moderator which is fulfilled by the microcontroller. 
 The project is developed under the guidance of Mr. D.V Gadre, CEDT lab in Netaji Subhas Institute of Technology (now, Netaji Subhas University of Technology). 
+
 It was developed alongside my friend Sumiran Bhasin (https://github.com/sumiran14)
 
 The microcontroller chosen is Texas Instruments low power device MSP430G2553.  
+
 This project also interfaces two external SPI devices, the Graphics LCD and a flash memor; a speaker is used for the voice output.
 The input from the player  is taken through a capacitive touch interface. 
-As of now, it speaks only speaks in one language and only the name of the object. 
-The next versions of the same project will have its own battery dependent power supply, better voice quality and more speed
+
+As of now, it speaks only speaks in one language and only the name of the object. The next versions of the same project will have its own battery dependent power supply, better voice quality and more speed
 
 The need of using external memory (an SPI flash) arised because MSP’s main memory couldn’t hold large amounts of data to play the audio files. 
 The audio files are first downloaded (using Google translate) and converted and sampled at 8kHz and stored in 8 bit format(because human voice has maximum frequency of 4 kHZ and we sample it at at least twice that frequency) 
