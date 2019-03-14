@@ -3,7 +3,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 #include <rand.h>
-#include <HBD.c>
 
 #define WRITE_ENABLE       0x06
 #define WRITE_DISABLE      0x04
@@ -49,14 +48,11 @@ int delta_cnt, k;
 uint8_t i,val;
 int pt;
 
-uint8_t HBDSong[51] = {
-                       000, 005, 010, 015, 020, 025, 030, 035, // 488-495
-                       040, 045, 050, 055, 060, 065, 070, 075, // 496-503
-                       80,  85,  90,  95, 100, 105, 110, 115, // 504-511
-                       120, 125, 130, 135, 140, 145, 150, 155, // 512-519
-                       160, 165, 170, 175, 180, 190, 195, 200, // 520-527
-                       205, 210, 215, 220, 225, 230, 235, 240, // 528-535
-                       245, 250, 255};
+//                        one       two         three       aeroplane       batak       bus         chidiya    maina       naav        patang       Table      tota        train       GAMEOVER    PlaceFinger Game
+uint32_t startAddr[16] = {0         ,11904      ,23808      ,36864          ,55680      ,70656      ,82560     ,116352     ,130560     ,142848     ,199680     ,241920     ,256128     ,98304      ,156672     ,212736}       ; //Stores starting addresses of all audio files
+uint32_t endinAddr[16] = {11904     ,23808      ,36864      ,55680          ,70656      ,82560      ,98304     ,130560     ,142848     ,156672     ,212736     ,256128     ,269184     ,116352     ,199680     ,241920}       ; //Stores ending addresses of all audio files
+int fly[10]            = {                                   1              ,1          ,0          ,1         ,1          ,0          ,1          ,0          ,1          ,0     }       ; //Stores whether the audio at that index fly or not
+int index;                //= 1;
 
 unsigned char transmit(unsigned char data)
 {
@@ -109,11 +105,7 @@ void timer_init()
     TA1CTL |= MC_1;         //up mode
 
     TA1CCTL2 |= OUTMOD_7;   //reset set mode
-    /*
-    P2DIR |= BIT4;          //P2.4 is connected to input of PAM
-    P2SEL |= BIT4;
-    P2SEL2&=~BIT4;
-     */
+
 }
 
 void clockInit()
@@ -159,7 +151,7 @@ void measure_count()
 
 void writeToLCD(unsigned char dataCommand, unsigned char data)
 {
-    __disable_interrupt();
+//    __disable_interrupt();
     __delay_cycles(10000);
     BCSCTL1 = CALBC1_1MHZ;                  // Set DCO to 1MHz
     DCOCTL  = CALDCO_1MHZ;
@@ -195,7 +187,7 @@ void writeToLCD(unsigned char dataCommand, unsigned char data)
     UCA0BR1 = 0;                            // SPI CLK -> SMCLK
     UCA0CTL1 &= ~UCSWRST;
     __delay_cycles(10000);
-    __enable_interrupt();
+//    __enable_interrupt();
 }
 
 void writeCharToLCD(char c)
@@ -318,8 +310,9 @@ void initLCD()
 
 void placeFinger()
 {
-    __disable_interrupt();
-    P2DIR &= ~BIT4;
+    addr  = startAddr[14];       //play audio of PlaceFinger
+    __enable_interrupt();
+
     while(1)
     {
         measure_count();
@@ -327,29 +320,20 @@ void placeFinger()
 
         if(abs(delta_cnt) > 40)
         {
-            P2OUT |= UserLED;
-            clearBank(2);
-            writeStringToLCD("Score : ");
-
-            setAddr(45,2);
-            writeCharToLCD(i);
-
-            P2DIR |= BIT4;
+            __disable_interrupt();
+            index = rand();
+            index = abs(index%9) + 3;
+            addr  = startAddr[index];
             __enable_interrupt();
+
             break;
         }
-        else
+        else if(addr  == endinAddr[14])
         {
-            clearBank(2);
-            writeStringToLCD(" Place Finger ");
+            addr  = startAddr[14];                      //keeps speaking "place finger" until the user does so
         }
     }
 }
-
-uint32_t startAddr[10] = {0     ,9408   ,16896  ,24000  ,29952  ,36096  ,42624  ,50496  ,57408  ,64512  }       ; //Stores starting addresses of all audio files
-uint32_t endinAddr[10] = {9408  ,16896  ,24000  ,29952  ,36096  ,42624  ,50496  ,57408  ,64512  ,71040  }       ; //Stores ending addresses of all audio files
-int fly[10]            = {1     ,1      ,1      ,0      ,0      ,0      ,1      ,1      ,1      ,0      }       ; //Stores whether the audio at that index fly or not
-int index;                //= 1;
 
 int main(void)
 {
@@ -380,35 +364,7 @@ int main(void)
 
     P1OUT |= BIT5;
 
-    k=0;
-    __delay_cycles(100);
-
-    k=0;
-    P1OUT &= ~BIT5;
-
-    transmit(JEDEC_ID);
-    ManID  = transmit(0);
-    memoryType = transmit(0);
-    capacity = transmit(0);
-
-    P1OUT |= BIT5;
-
-
-    k=0;
     initLCD();
-    __delay_cycles(50);
-    //   spi_init();
-    //   __delay_cycles(100);
-
-    P1OUT &= ~BIT5;
-
-    transmit(JEDEC_ID);
-    ManID  = transmit(0);
-    memoryType = transmit(0);
-    capacity = transmit(0);
-
-    P1OUT |= BIT5;
-
     __delay_cycles(100);
 
     for(i=0;i<25;i++)
@@ -417,39 +373,48 @@ int main(void)
         base_cnt = (meas_cnt+base_cnt)/2;
     }
 
+    i = 0x39;                               //ascii for '9'
 
     clearBank(0);
     writeStringToLCD(" Chidiya Udd ");
     clearBank(1);
     writeStringToLCD(" with MSP430 ");
     clearBank(2);
-    writeStringToLCD(" Place Finger ");
-
-    i = 0x39;                               //ascii for '9'
-    //    clearBank(3);
-    //setAddr(45,2);
-    //writeCharToLCD(i);
+    writeStringToLCD("Score : ");
+    setAddr(45,2);
+    writeCharToLCD(i);
 
     P2DIR |= BIT4;          //P2.4 is connected to input of PAM
     P2SEL |= BIT4;
     P2SEL2&=~BIT4;
 
-    index = rand();
-    index = abs(index%9);
-    addr = startAddr[index];
-    //    addr = 0;
-
-    //    __enable_interrupt();
-    k=1;
+    __enable_interrupt();
 
     placeFinger();
+
+    addr  = startAddr[15];      //The Game will begin in
+    while(addr!=endinAddr[15]);
+
+    addr  = startAddr[2];       //Three
+    while(addr!=endinAddr[2]);
+
+    addr  = startAddr[1];       //Two
+    while(addr!=endinAddr[1]);
+
+    addr  = startAddr[0];       //One
+    while(addr!=endinAddr[0]);
+
+    index = rand();
+    index = abs(index%9) + 3;
+    addr  = startAddr[index];
 
     while(1)
     {
         if(addr==endinAddr[index])                  //if end of current audio is reached play next audio
         {
             __disable_interrupt();
-            if(fly[index]==1)                       //current audio being played flies
+
+            if(fly[index-3]==1)                       //current audio being played flies
             {                                       //audio has ended but user didn't lift finger
                 measure_count();
                 delta_cnt = meas_cnt - base_cnt;
@@ -459,7 +424,6 @@ int main(void)
                     i--;
                     setAddr(45,2);
                     writeCharToLCD(i);
-                    __delay_cycles(1000000);
                 }
             }
             else
@@ -472,29 +436,21 @@ int main(void)
                     i--;
                     setAddr(45,2);
                     writeCharToLCD(i);
-                    __delay_cycles(1000000);
                 }
             }
-
-            index = rand();
-            index = abs(index%9);
-            addr  = startAddr[index];
-
+            __delay_cycles(64000000);       //stops for 5sec
             placeFinger();
-
         }
         if(i==0x30)
         {
-            P2DIR &= ~BIT4;
-            __delay_cycles(10000);
-            clearBank(0);
-            writeStringToLCD(" GAME OVER ");
-            clearBank(1);
-            writeStringToLCD("PRESS RESET ");
-            clearBank(2);
-            writeStringToLCD("TO PLAY AGAIN ");
-            __disable_interrupt();
-            while(1);
+            while(1)
+            {
+                addr  = startAddr[13];      //audio for Game Over
+                while(addr!=endinAddr[13]);
+                __disable_interrupt();
+                __delay_cycles(32000000);       //stops for 2sec
+                __enable_interrupt();
+            }
         }
     }
 }
@@ -511,7 +467,7 @@ void __attribute__ ((interrupt(WDT_VECTOR))) watchdog_timer (void)
 #endif
 {
     pt++;
-    if(pt==4)
+    if(pt==2)
     {
         //coming into this indicates 1/8000 of a second have passed
         //so read the next byte and set the new pulse width
@@ -522,41 +478,13 @@ void __attribute__ ((interrupt(WDT_VECTOR))) watchdog_timer (void)
         transmit( (addr&0x0000FF00) >>  8);
         transmit( (addr&0x000000FF));
 
-        //transmit(0);
         val = transmit(0);
 
         TA1CCR2 = val;
-        /*
-        if(in<52)
-        {
-            in++;
-            TA1CCR2 = HBDSong[in];
-        }
-        else
-        {
-            in = 0;
-        }
-         */
+
         P1OUT |= BIT5;
 
-
         addr++;
-        /*
-        if(addr==endinAddr[index])                  //if end of current audio is reached play next audio
-        {
-            if(fly[index]==1)                       //current audio being played flies
-            {                                       //audio has ended but user didn't lift finger
-                i--;
-                //clearBank(3);
-                setAddr(45,2);
-                writeCharToLCD(i);
-                __delay_cycles(1000000);
-            }
-            index = rand();
-            index = abs(index%9);
-            addr  = startAddr[index];
-        }
-         */
         pt=0;
     }
 }
