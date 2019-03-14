@@ -4,10 +4,10 @@ Its titled “Chidiya udd”. The rules of the game are simple.
 In the contemporary form, a person becomes a moderator and says the name of many objects which can either fly or they don’t and the players have to raise their finger in accordance with the object. 
 This project replicates exactly the contemporary form but eliminating the need of a moderator which is fulfilled by the microcontroller. 
 The project is developed under the guidance of Mr. D.V Gadre, CEDT lab in Netaji Subhas Institute of Technology (now, Netaji Subhas University of Technology). 
-It was developed alongside my partner, Aditya Wadhwa.(https://github.com/AdityaWadhwa)
+It was developed alongside my friend Sumiran Bhasin (https://github.com/sumiran14)
 
 The microcontroller chosen is Texas Instruments low power device MSP430G2553.  
-This project also interfaces two external SPI devices, the Graphics LCD and a flash memory and a speaker for the voice output.
+This project also interfaces two external SPI devices, the Graphics LCD and a flash memor; a speaker is used for the voice output.
 The input from the player  is taken through a capacitive touch interface. 
 As of now, it speaks only speaks in one language and only the name of the object. 
 The next versions of the same project will have its own battery dependent power supply, better voice quality and more speed
